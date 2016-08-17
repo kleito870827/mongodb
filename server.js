@@ -1,9 +1,93 @@
-import request from 'request'
-import mongoose,{connection, Schema} from 'mongoose'
+// import request from 'request'
+// import mongoose,{connection, Schema} from 'mongoose'
 // var mongoose = require('mongoose')
 // const {connection, Schema} = mongo
 // import logAllProperties from './logAllProperties'
-var bcrypt = require('bcryptjs')
+const bcrypt = require('bcryptjs')
+const mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost/test');
+mongoose.Promise = global.Promise
+const Schema=mongoose.Schema
+var db = mongoose.connection
+
+db.on('error', function(){
+  console.log(`can't connect to DB`)
+})
+
+db.once('open', function(){
+  console.log('Connection to DB')
+})
+
+//link
+const personSchema = Schema({
+  _id: Number,
+  name: String,
+  age: Number,
+  stories: [{type: Number, ref: 'Story'}]
+})
+
+const StorySchema = Schema({
+  title: String,
+  creator: {type: Number, ref: 'Person'},
+  fans: [{type: Number, ref: 'person'}]
+})
+
+const Story = mongoose.model('Story', StorySchema)
+const Person = mongoose.model('Person', personSchema)
+
+const clawnyeWest = new Person({
+  _id: 0,
+  name: 'Clawnye West',
+  age: 77
+})
+
+const clawnyeStory = new Story({
+  title: 'Once upon a time',
+  creator: clawnyeWest._id
+})
+
+// clawnyeWest.save()
+//   .then(Person =>console.log(Person))
+//
+// clawnyeStory.save()
+//   .then(Story => console.log(Story))
+
+Story.find({title: 'Once upon a time'})
+  .populate('creator')
+  .then(story => console.log(story))
+// Mongoose.com/docs/
+// var kittySchema = mongoose.Schema({
+//   name: String
+// });
+//
+// // var Kitten = mongoose.model('Kitten', kittySchema);
+//
+// kittySchema.methods.speak = function(){
+//   var greeting = this.name? 'Meow name is '+ this.name: 'I do not have a name';
+//   console.log(greeting);
+// }
+//
+//
+// var Kitten = mongoose.model('Kitten', kittySchema);
+//
+// var silence = new Kitten({ name:'Silence'});
+// console.log(silence.name);
+// //
+// var fluffy = new Kitten({ name: 'fluffy'});
+// fluffy.speak();
+// //
+// fluffy.save(function(err, fluffy){
+//   if (err) return console.error(err);
+//   fluffy.speak();
+// });
+// //
+// Kitten.find(function(err, kittens){
+//   if (err) return console.error(err);
+//   console.log(kittens);
+// })
+//
+// Kitten.find({name: /^fluff/})
+//   .then(fluffy=>console.log(fluffy))
 
 // console.log('yo')
 // const witch = "I'll get you, my pretty... and your little dog too!"
@@ -108,74 +192,89 @@ var bcrypt = require('bcryptjs')
 //     .then(photo => console.log(photo))
 
 //mongoose
-  mongoose.Promise = global.Promise
-  mongoose.connect('mongodb://localhost/sandbox')
-  connection.on('error', console.error.bind(console, 'connection error: '))
-  connection.once('open', ()=> console.log('Connected to DB!'))
+  // mongoose.Promise = global.Promise
+  // mongoose.connect('mongodb://localhost/sandbox')
+  // connection.on('error', console.error.bind(console, 'connection error: '))
+  // connection.once('open', ()=> console.log('Connected to DB!'))
 
-const userSchema = new Schema({
-  name: String,
-  username: {
-    type: String,
-    // required: true,
-    // unique: true
-  },
-  password: {
-    type: String,
-    // require: true
-  },
-  admin: Boolean,
-  created_at:{
-    type: Date,
-    default: Date.now
-  },
-  updated_at: Date
-})
-
+// const userSchema = new Schema({
+//   name: String,
+//   username: {
+//     type: String,
+//     required: true,
+//     unique: true
+//   },
+//   password: {
+//     type: String,
+//     require: true
+//   },
+//   admin: Boolean,
+//   created_at:{
+//     type: Date,
+//     default: Date.now
+//   },
+//   updated_at: Date
+// })
+//
 // userSchema.methods.encryptPassword = function(){
 //   this.password = bcrypt.hashSync(this.password, 10)
 //   return this.password
 // }
+//
+// userSchema.methods={
+//   encryptPassword: function(){
+//
+//     this.password = bcrypt.hashSync(this.password, 1)
+//     return this.password
+//   },
+//   authenticate: function(plainPass){
+//     return bcrypt.compareSync(plainPass, this.password)
+//   }
+// }
+//
+// userSchema.pre('save', function (next){
+//
+//   this.encryptPassword()
+//
+//   next()
+// })
+// //
+// const User = mongoose.model('User', userSchema)
+//
+// const yasiel = User ({
+//   name: 'caleo',
+//   username: 'kleito',
+//   password: 'kleo',
+//   admin: true
+// })
+//
+// const joe = User ({
+//   name: 'joe',
+//   username: 'world',
+//   password:'joe',
+//   admin: false
+// })
+//
+//
+    // joe.save()
+    // .then(savedUser => console.log(`User ${savedUser.name} saved!`))
+    // .catch(e=>console.log(e.message))
 
-userSchema.methods={
-  encryptPassword: function(){
+    // DELETE
+ // User.findByIdAndRemove("57b3a2984244ee9405393d3e")
+ //  .then(deleteUser => console.log(`You have deleted: ${deleteUser}`))
+ //  .catch(e=>console.log(e.message))
 
-    this.password = bcrypt.hashSync(this.password, 0)
-    return this.password
-  },
-  // authenticate: function(plainPass){
-  //   return bcrypt.compareSync(plainPass, this.password)
-  // }
-}
-
-userSchema.pre('save', function (next){
-
-  this.encryptPassword()
-
-  next()
-})
-
-const User = mongoose.model('User', userSchema)
-
-const yasiel = User ({
-  name: 'caleo',
-  username: 'kleito',
-  password: 'kleo',
-  admin: true
-})
-
-const joe = User ({
-  name: 'joe',
-  username: 'world',
-  password:'joe',
-  admin: false
-})
-
-
-    joe.save()
-    .then(savedUser => console.log(`User ${savedUser.name} saved!`))
-    .catch(e=>console.log(e.message))
-
+  // UPDATE
+// User.findById('57b3a359b040bc841f927528')
+//   .then(userFromDB=>{
+//     console.log(userFromDB)
+//     Object.assign(userFromDB, {name:['Bob', 'joe', 'victor'], username:'new'})
+//     console.log(userFromDB)
+//     userFromDB.save()
+//     .then(savedUser => console.log(`User ${savedUser.name} and ${savedUser.username} saved!`))
+//     .catch(e=>console.log(e.message))
+//   })
   //   joe.save()
   //  .then(savedUser => console.log(`User ${savedUser.name} saved!`))
   //  .catch(e=>console.log(e.message))
