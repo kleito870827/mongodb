@@ -8,7 +8,10 @@ const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/test');
 mongoose.Promise = global.Promise
 const Schema=mongoose.Schema
-var db = mongoose.connection
+const db = mongoose.connection
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser')
 
 db.on('error', function(){
   console.log(`can't connect to DB`)
@@ -17,45 +20,158 @@ db.on('error', function(){
 db.once('open', function(){
   console.log('Connection to DB')
 })
+const app = express()
+
+/*MIDDLEWARE*/
+ app.use(bodyParser.json())
+ app.use(bodyParser.urlencoded({extended: true}))
+ app.use(cors())
+
+const bookSchema = new Schema ({
+  title: String,
+  author: String,
+  category: String
+})
+
+const Book = mongoose.model('book', bookSchema)
+
+app.post('/books', (req, res)=>{
+  const newBook = new Book(req.body)
+  newBook.save()
+  .then(savedBook=> {
+    res.json(savedBook)
+    console.log(`The book ${savedBook.title} is saved!`)
+  })
+  .catch(e=> console.log(e.message))
+})
+// $.ajax({
+// url: 'http://localhost:3000/books',
+// method: 'POST',
+// data:{
+// author: 'joe',
+// title: 'joes',
+// category: 'web'
+// },
+// success: function(resp){
+// console.log(resp);
+// }
+// })
+
+app.get('/books', (req, res)=>{
+  Book.find()
+    .then(books=> res.json(books))
+    .catch(e=>console.log(e.message))
+})
+// http://localhost:3000/books
+
+app.put('/books/:_id', (req, res)=>{
+  Book.findById(req.params._id)
+    .then(bookFromDB=>{
+      console.log(bookFromDB)
+      Object.assign(bookFromDB, req.body)
+      console.log(bookFromDB)
+      bookFromDB.save()
+      .then(savedBook => console.log(`User ${savedBook.req.body} saved!`))
+      .catch(e=>console.log(e.message))
+    })
+
+})
+// $.ajax({
+// url: 'http://localhost:3000/books/57b4f73116e39080176062e8',
+// method: 'PUT',
+// data:{
+// category: 'code'
+// },
+// success: function(resp){
+// console.log(resp);
+// }
+// })
+
+app.delete('/books/:_id', (req,res)=>{
+  Book.findByIdAndRemove(req.params._id)
+   .then(deleteBook => console.log(`You have deleted: ${deleteBook}`))
+   .catch(e=>console.log(e.message))
+})
+// $.ajax({
+// url: 'http://localhost:3000/books/57b4f73116e39080176062e8',
+// success: function(resp,txt,xhr){
+// console.log(resp);
+// },
+// method: 'DELETE'
+// })
+
+app.listen(3000, ()=>console.log('listening on 3000'))
 
 //link
-const personSchema = Schema({
-  _id: Number,
-  name: String,
-  age: Number,
-  stories: [{type: Number, ref: 'Story'}]
-})
+// const personSchema = Schema({
+//   _id: Number,
+//   name: String,
+//   age: Number,
+//   stories: [{type: Number, ref: 'Story'}]
+// })
+//
+// const StorySchema = Schema({
+//   title: String,
+//   creator: {type: Number, ref: 'Person'},
+//   fans: [{type: Number, ref: 'Person'}]
+// })
 
-const StorySchema = Schema({
-  title: String,
-  creator: {type: Number, ref: 'Person'},
-  fans: [{type: Number, ref: 'person'}]
-})
+// const Story = mongoose.model('Story', StorySchema)
+// const Person = mongoose.model('Person', personSchema)
+//
+// const clawnyeWest = new Person({
+//   _id: 0,
+//   name: 'Clawnye West',
+//   age: 77
+// })
+//
+// const bob = new Person({
+//   _id: 1,
+//   name: 'Bob Smith ',
+//   age: 17
+// })
+// const jim = new Person({
+//   _id: 2,
+//   name: 'Jim Jones',
+//   age: 27
+// })
 
-const Story = mongoose.model('Story', StorySchema)
-const Person = mongoose.model('Person', personSchema)
+// const clawnyeStory = new Story({
+//   title: 'Once upon a time',
+//   creator: clawnyeWest._id
+// })
 
-const clawnyeWest = new Person({
-  _id: 0,
-  name: 'Clawnye West',
-  age: 77
-})
+// const clawnyeStory2 = new Story({
+//   title: 'The retur of the king',
+//   creator: clawnyeWest._id,
+//   fans: [bob._id, jim._id]
+// })
+//
+// clawnyeStory2.save()
+//    .then(Story => console.log(Story))
+//    .catch(e => console.log(e.message))
+// bob.save()
+//   .then(Person =>console.log(Person))
+//   .catch(e=> console.log(e.message))
+//  jim.save()
+//    .then(Person =>console.log(Person))
+//    .catch(e=> console.log(e.message))
 
-const clawnyeStory = new Story({
-  title: 'Once upon a time',
-  creator: clawnyeWest._id
-})
+// Story.find({title: 'The retur of the king'})
+//   .populate('creator fans')
+//   .then(story => console.log(story.toString()))
+//   .catch(e=>console.log(e.message))
 
 // clawnyeWest.save()
 //   .then(Person =>console.log(Person))
 //
 // clawnyeStory.save()
 //   .then(Story => console.log(Story))
-
-Story.find({title: 'Once upon a time'})
-  .populate('creator')
-  .then(story => console.log(story))
-// Mongoose.com/docs/
+//
+// Story.find({title: 'Once upon a time'})
+//   .populate('creator', 'age name')
+//   .then(story => console.log(story))
+// // Mongoose.com/docs/
 // var kittySchema = mongoose.Schema({
 //   name: String
 // });
